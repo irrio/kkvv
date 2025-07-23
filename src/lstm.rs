@@ -3,6 +3,8 @@ pub struct Lstm {
 }
 
 impl Lstm {
+    pub const NO_DATA: &'static [u8] = &[];
+
     pub fn new() -> Self {
         Lstm {
             entries: Vec::new(),
@@ -15,7 +17,11 @@ impl Lstm {
                 return v.as_ref();
             }
         }
-        &[]
+        Lstm::NO_DATA
+    }
+
+    pub fn del(&mut self, key: &[u8]) {
+        self.set(key, Lstm::NO_DATA)
     }
 
     pub fn set(&mut self, key: &[u8], val: &[u8]) {
@@ -49,7 +55,7 @@ mod tests {
     #[test]
     fn get_undefined() {
         let lstm = Lstm::new();
-        assert_eq!(lstm.get(b"abc"), &[]);
+        assert_eq!(lstm.get(b"abc"), Lstm::NO_DATA);
     }
 
     #[test]
@@ -63,8 +69,8 @@ mod tests {
     fn set_del_and_get() {
         let mut lstm = Lstm::new();
         lstm.set(b"abc", b"xyz");
-        lstm.set(b"abc", &[]);
-        assert_eq!(lstm.get(b"abc"), &[]);
+        lstm.del(b"abc");
+        assert_eq!(lstm.get(b"abc"), Lstm::NO_DATA);
     }
 
     #[test]
