@@ -1,5 +1,7 @@
+mod memtable;
+
 pub struct Lstm {
-    entries: Vec<(Box<[u8]>, Box<[u8]>)>,
+    memtable: memtable::MemTable,
 }
 
 impl Lstm {
@@ -7,17 +9,12 @@ impl Lstm {
 
     pub fn new() -> Self {
         Lstm {
-            entries: Vec::new(),
+            memtable: memtable::MemTable::new(),
         }
     }
 
     pub fn get(&self, key: &[u8]) -> &[u8] {
-        for (k, v) in &self.entries {
-            if k.as_ref() == key {
-                return v.as_ref();
-            }
-        }
-        Lstm::NO_DATA
+        self.memtable.get(key).unwrap_or(Lstm::NO_DATA)
     }
 
     pub fn del(&mut self, key: &[u8]) {
@@ -25,26 +22,10 @@ impl Lstm {
     }
 
     pub fn set(&mut self, key: &[u8], val: &[u8]) {
-        if val.is_empty() {
-            if let Some((idx, _)) = self
-                .entries
-                .iter()
-                .enumerate()
-                .find(|(_idx, (k, _v))| k.as_ref() == key)
-            {
-                self.entries.swap_remove(idx);
-            }
-        }
-        for (k, v) in &mut self.entries {
-            if k.as_ref() == key {
-                *v = val.to_owned().into_boxed_slice();
-                return;
-            }
-        }
-        self.entries.push((
+        self.memtable.set(
             key.to_owned().into_boxed_slice(),
             val.to_owned().into_boxed_slice(),
-        ));
+        )
     }
 }
 
